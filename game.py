@@ -40,9 +40,7 @@ class Move:
         self.x = x
         self.y = y
 
-def convert_str_to_move(string, current_pieces):
-    move_list = string.replace(' ', '').split(',')
-    return Move(current_pieces[int(move_list[0])-1], int(move_list[1]), int(move_list[2]))
+
 
 
 class Board:
@@ -168,8 +166,7 @@ Piece([(0,0),(0,1),(1,0),(1,1)]), #2x2
 Piece([(0,0),(0,1),(0,2),(1,0),(1,1),(1,2),(2,0),(2,1),(2,2)]) #3x3
 ] 
 
-# Starting game loop
-############################################################################
+
 
 def play(get_move, verbose = True):
     game_over = False
@@ -187,11 +184,13 @@ def play(get_move, verbose = True):
             for i in range(len(board.current_pieces)):
                 print ("{})".format(i+1))
                 print (board.current_pieces[i])
-        move = get_move(board, board.current_pieces)
+        if verbose:
+            print("------------------------------------------")
+        move = get_move(board)
         try:
             cleared_rows, cleared_cols = board.place_piece(move)
-            print("------------------------------------------")
-            print("{}placed at {},{}".format(move.piece,move.x,move.y))
+            if verbose:
+                print("{}placed at {},{}".format(move.piece,move.x,move.y))
             if cleared_cols != []:
                 for col in cleared_cols:
                     print("Cleared Column {}!".format(col))
@@ -208,9 +207,5 @@ def play(get_move, verbose = True):
             board.refresh_pieces()
     return move_num, cleared_lines
 
-def human_input(board, current_pieces):
-    move_input = input("Please input your move: ")
-    return convert_str_to_move(move_input, current_pieces)
 
-score = play(human_input)
-print("Game Over! You lasted {} moves and cleared {} lines!".format(score[0],score[1]))
+
