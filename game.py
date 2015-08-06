@@ -40,6 +40,9 @@ class Move:
         self.x = x
         self.y = y
 
+    def __str__(self):
+        return "Piece {} at {},{}".format(self.piece,self.x,self.y)
+
 
 
 
@@ -51,10 +54,20 @@ class Board:
     """Constructs a Board. Default is empty"""
     def __init__(self, matrix = EMPTY_BOARD, current_pieces = []):
         self.matrix = matrix
-        self.current_pieces = []
+        self.current_pieces = current_pieces
+
+
+    def copy(self):
+        """Returns a new board identical to self"""
+        new_matrix = []
+        for col in self.matrix:
+            new_matrix.append(col[:])
+        return Board(new_matrix, self.current_pieces[:])
 
     """Returns True if you can place Piece p at the Location loc"""
     def is_valid_move(self, move):
+        if not move.piece in self.current_pieces:
+            return False  
         for block in move.piece.blocks:
             currX, currY = block[0] + move.x, block[1] + move.y
             if currX not in range(10) or currY not in range(10) or self.matrix[currX][currY] == 1:
@@ -101,7 +114,7 @@ class Board:
 
     """Places a piece p at a space loc (given by a tuple with two coordinates), updates board accordingly
         Returns a tuple of two lists that contains rows and cols cleared respectively"""
-    def place_piece(self, move):
+    def make_move(self, move):
         if self.is_valid_move(move):
             # placing piece
             for block in move.piece.blocks:
@@ -117,7 +130,7 @@ class Board:
             self.current_pieces.remove(move.piece)
             return full_rows, full_cols
         else:
-            raise InvalidMoveException('this is not a valid move')
+            raise InvalidMoveException('{} is not a valid move'.format(move))
     def refresh_pieces(self):
         for num in range(3):
             self.current_pieces.append(random.choice(piece_list))
@@ -188,7 +201,7 @@ def play(get_move, verbose = True):
             print("------------------------------------------")
         move = get_move(board)
         try:
-            cleared_rows, cleared_cols = board.place_piece(move)
+            cleared_rows, cleared_cols = board.make_move(move)
             if verbose:
                 print("{}placed at {},{}".format(move.piece,move.x,move.y))
             if cleared_cols != []:
@@ -205,6 +218,14 @@ def play(get_move, verbose = True):
             print("Please enter a valid piece number, enter the correct format for a move: piece_num, x, y")
         if board.current_pieces == []:
             board.refresh_pieces()
+    if verbose:
+        print("##########################################")
+        print ("Move {}:".format(move_num))
+        print ("Here is the current board: \n"+str(board))
+        print("These are the current pieces")
+        for i in range(len(board.current_pieces)):
+            print ("{})".format(i+1))
+            print (board.current_pieces[i])
     return move_num, cleared_lines
 
 
