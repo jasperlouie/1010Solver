@@ -10,10 +10,11 @@ def get_best_move_seqs(board):
 	output = []
 	max_score = -1
 	curr_gen = []
+
 	for move in board.get_valid_moves():
 		curr_gen.append([move])
 	# count = 0
-	for i in range(len(board.current_pieces)):
+	for i in range(2):
 		# print("gen {}".format(i))
 		# print(len(output))
 		# time.sleep(5)	
@@ -28,7 +29,10 @@ def get_best_move_seqs(board):
 				# print("simulated {} moves".format(count))
 				if i == 1:
 					curr_board = pre_board.copy()
+					# print "THIS IS THE BOARD I SEE"
+					# print curr_board
 					curr_board.make_move(new_move)
+					
 					score = score_board(curr_board)
 					if score > max_score:
 						# print score
@@ -46,6 +50,7 @@ def get_best_move_seqs(board):
 				else:
 					curr_move_seq = list(move_seq)
 					curr_move_seq.append(new_move)
+					# print curr_move_seq
 					next_gen.append(curr_move_seq)
 		curr_gen = next_gen
 	return output
@@ -74,26 +79,37 @@ def get_num_free_lines(board):
 
 def can_place_all_pieces(board):
 	biggest_pieces = [game.piece_dict['e'],game.piece_dict['i'],game.piece_dict['s']]
+	score = 0
 	for piece in biggest_pieces:
 		board.current_pieces = [piece]
-		if not board.has_valid_moves():
-			return False
-	return True
-
+		if board.has_valid_moves():
+			score += 150
+	return score
+def squared_continuous_spaces(board):
+	score = 0
+	count = 0
+	for x in range(10):
+		for y in range(10):
+			if board.matrix[x][y] == 0:
+				count += 1
+			else:
+				score += count**2
+				count = 0
+	return score
 
 def score_board(board):
 	# if can_place_all_pieces(board):
 	# 	return get_num_free_lines(board)*100+get_num_free_spaces(board)+200
 	# return get_num_free_lines(board)*100+get_num_free_spaces(board)
-	return get_num_free_lines(board)
+	return squared_continuous_spaces(board)+can_place_all_pieces(board)
 
 
 move_queue = []
 def refresh_move_queue(board):
 	global move_queue
 	best_moves = get_best_move_seqs(board)
-	print("Best Moves: ")
-	print(best_moves)
+	# print("Best Moves: ")
+	# print(best_moves)
 	# print best_moves
 	# move_queue = random.choice(best_moves)
 	if best_moves != []:
