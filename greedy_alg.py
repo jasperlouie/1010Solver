@@ -85,6 +85,22 @@ def can_place_all_pieces(board):
 		if board.has_valid_moves():
 			score += 150
 	return score
+# def squared_continuous_spaces(board):
+# 	score = 0
+# 	count = 0
+# 	for x in range(10):
+# 		for y in range(10):
+# 			if board.matrix[x][y] == 0:
+# 				count += 1
+# 			else:
+# 				if count == 1:
+# 					score -= 7
+# 					count = 0
+# 				else:
+# 					score += count**2
+# 					count = 0
+# 	return score
+
 def squared_continuous_spaces(board):
 	score = 0
 	count = 0
@@ -93,15 +109,30 @@ def squared_continuous_spaces(board):
 			if board.matrix[x][y] == 0:
 				count += 1
 			else:
-				score += count**2
-				count = 0
+				if count == 1:
+					score -= 6
+					count = 0
+				else:
+					score += count**2
+					count = 0
+	for y in range(10):
+		for x in range(10):
+			if board.matrix[x][y] == 0:
+				count += 1
+			else:
+				if count == 1:
+					score -= 6
+					count = 0
+				else:
+					score += count**2
+					count = 0
 	return score
 
 def score_board(board):
 	# if can_place_all_pieces(board):
 	# 	return get_num_free_lines(board)*100+get_num_free_spaces(board)+200
 	# return get_num_free_lines(board)*100+get_num_free_spaces(board)
-	return squared_continuous_spaces(board)+can_place_all_pieces(board)
+	return squared_continuous_spaces(board)+can_place_all_pieces(board)*2
 
 
 move_queue = []
