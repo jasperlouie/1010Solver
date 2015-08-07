@@ -101,7 +101,7 @@ def score_board(board):
 	# if can_place_all_pieces(board):
 	# 	return get_num_free_lines(board)*100+get_num_free_spaces(board)+200
 	# return get_num_free_lines(board)*100+get_num_free_spaces(board)
-	return squared_continuous_spaces(board)+can_place_all_pieces(board)
+	return squared_continuous_spaces(board) + can_place_all_pieces(board)
 
 
 move_queue = []
@@ -123,7 +123,9 @@ def get_move(board):
 		refresh_move_queue(board)
 	if move_queue == []:
 		move_queue = [naive_alg.get_move(board)]
-	print move_queue
+	# print move_queue
 	move = move_queue.pop(0)
-	print move
+	# print move
 	return move
+
+# def get_move_misere(board):
