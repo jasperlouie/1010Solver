@@ -48,6 +48,12 @@ class Move:
     def __repr__(self):
         return '\n' + str(self)
 
+    def export_as_str(self):
+        return chr((10*self.y+self.x)+32)+ self.piece.char_rep
+
+def import_move_as_str(string):
+    print string
+    return Move(piece_dict[string[1]], (ord(string[0])-32)%10, ((ord(string[0])-32)//10))
 
 
 
@@ -127,23 +133,47 @@ class Board:
         Returns a tuple of two lists that contains rows and cols cleared respectively"""
     def make_move(self, move):
         if self.is_valid_move(move):
+            move_str = move.export_as_str()
             # placing piece
             for block in move.piece.blocks:
                 self.matrix[block[0] + move.x][block[1] + move.y] = 1
             # clearing appropriate rows/cols
             full_rows, full_cols = self.get_full_rows(), self.get_full_cols()
             for y in full_rows:
+                move_str += "{}y".format(y)
                 for x in range(10):
                     self.matrix[x][y] = 0
             for x in full_cols:
+                move_str += "{}x".format(x)
                 for y in range(10):
                     self.matrix[x][y] = 0
             self.current_pieces.remove(move.piece)
-            return full_rows, full_cols
+            return full_rows, full_cols, move_str
         else:
             print("Here is a string representing the current board:")
             print(self.export_as_str())
             raise InvalidMoveException('{} is not a valid move'.format(move))
+
+    """Places a piece p at a space loc (given by a tuple with two coordinates), updates board accordingly
+        Returns a tuple of two lists that contains rows and cols cleared respectively"""
+    def force_move(self, move):
+        # placing piece
+        move_str = move.export_as_str()
+        for block in move.piece.blocks:
+            self.matrix[block[0] + move.x][block[1] + move.y] = 1
+        # clearing appropriate rows/cols
+        full_rows, full_cols = self.get_full_rows(), self.get_full_cols()
+        for y in full_rows:
+            move_str += "{}y".format(y)
+            for x in range(10):
+                self.matrix[x][y] = 0
+        for x in full_cols:
+            move_str += "{}x".format(x)
+            for y in range(10):
+                self.matrix[x][y] = 0
+        # self.current_pieces.remove(move.piece)
+        return full_rows, full_cols, move_str
+
             
 
     def refresh_pieces(self):
@@ -168,6 +198,27 @@ class Board:
                 self.matrix[x][y] = int(input_str[x*10+y])
         for char in input_str[100:]:
             self.current_pieces.append(piece_dict[char])
+
+    def undo_move(self, move):
+        if isinstance(move, Move):
+            for block in move.piece.blocks:
+                self.matrix[block[0] + move.x][block[1] + move.y] = 0
+        else:
+            while len(move) > 2:
+                if move[-1] == 'x':
+                    for y in range(10):
+                        self.matrix[int(move[-2])][y] = 1
+                elif move[-1] == 'y':
+                    for x in range(10):
+                        self.matrix[x][int(move[-2])] = 1
+            new_move = Move()
+            new_move.import_str(move[:2])
+            for block in move.piece.blocks:
+                self.matrix[block[0] + move.x][block[1] + move.y] = 0
+
+    # def import_move_str(self, move_str):
+    #     while x < 
+    #     curr_pair = move_str
 
     def __str__(self):
         out = "  "
@@ -228,6 +279,7 @@ def play(get_move, verbose = True):
     score = 0
     board = Board()
     board.refresh_pieces()
+    move_str = ""
     while board.has_valid_moves():
 
         if verbose:
@@ -240,7 +292,8 @@ def play(get_move, verbose = True):
             print("------------------------------------------")
         move = get_move(board)
         # try:
-        cleared_rows, cleared_cols = board.make_move(move)
+        cleared_rows, cleared_cols, new_move_str = board.make_move(move)
+        move_str += new_move_str
         score += len(move.piece.blocks)
         if verbose:
             print("{}placed at {},{}".format(move.piece,move.x,move.y))
@@ -267,7 +320,64 @@ def play(get_move, verbose = True):
         print ("Move {}:".format(move_num))
         print ("Score: {}".format(score))
         print ("Here is the current board: \n"+str(board))
-    return move_num, cleared_lines, score, board
+        print("Import this string to see a replay of the game:\n{}".format(move_str))
+    return move_num, cleared_lines, score, board, move_str
+
+def replay(move_string, verbose = True):
+    move_string = move_string.strip("\n")
+    move_num = 1
+    cleared_lines = 0
+    score = 0
+    board = Board()
+    # board.refresh_pieces()
+    move_str = ""
+    while move_string != "":
+
+        if verbose:
+            print("##########################################")
+            print ("Move {}:".format(move_num))
+            print ("Score {}:".format(score))
+            print ("Here is the current board: \n"+str(board))
+            
+        if verbose:
+            print("------------------------------------------")
+        next_move_chars = 'xx'
+        while next_move_chars[1] == 'x' or next_move_chars[1] == 'y':
+            next_move_chars = move_string[:2]
+            move_string = move_string[2:]
+        move = import_move_as_str(next_move_chars)
+        
+        # try:
+        cleared_rows, cleared_cols, new_move_str = board.force_move(move)
+        move_str += new_move_str
+        score += len(move.piece.blocks)
+        if verbose:
+            print("{}placed at {},{}".format(move.piece,move.x,move.y))
+            if cleared_cols != []:
+                for col in cleared_cols:
+                    print("Cleared Column {}!".format(col))
+            if cleared_rows != []:
+                for row in cleared_rows:
+                    print("Cleared Row {}!".format(row))
+        cleared_lines += len(cleared_rows) + len(cleared_cols)
+        clear_bonus = 0
+        for x in range(len(cleared_rows) + len(cleared_cols)):
+            clear_bonus += x + 1
+        score += clear_bonus * 10
+        move_num += 1
+        # except InvalidMoveException:
+        #     print("That is an invalid move, please make sure you are placing the piece in a valid space")
+        # except:
+        #     print("Please enter a valid piece number, enter the correct format for a move: piece_num, x, y")
+        # if board.current_pieces == []:
+            # board.refresh_pieces()
+    if verbose:
+        print("##########################################")
+        print ("Move {}:".format(move_num))
+        print ("Score: {}".format(score))
+        print ("Here is the current board: \n"+str(board))
+        print("Import this string to see a replay of the game:\n{}".format(move_str))
+    return move_num, cleared_lines, score, board, move_str
 
 
 
