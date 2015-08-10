@@ -4,7 +4,7 @@ import human_input, game, random_strat, greedy_alg, naive_alg
 # solver_dict = {"human":human_input, "random":random_strat, "greedy":greedy_alg, "naive":naive_alg}
 # solver = input("Please select a solver from the following by typing its name\n{}\n".format(solver_dict.keys()))
 # if solver in solver_dict:
-num_games = 10000
+num_games = 100
 top_score = [-1,-1,-1]
 running_total = [0.0,0.0,0.0]
 worst_score = [999,999,999]

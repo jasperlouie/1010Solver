@@ -55,6 +55,78 @@ def get_best_move_seqs(board):
 		curr_gen = next_gen
 	return output
 
+def swap_last_moves(move_str):
+	"""generates a string that swaps the last two moves in the move_str. Used for pruning already calculated moves. returns new string"""
+	move1_index = len(move_str)-1
+	while move_str[move1_index] == 'x' or move_str[move1_index] == 'y':
+		move1_index -= 2
+	move2_index = move1_index - 2
+	while move_str[move2_index] == 'x' or move_str[move2_index] == 'y':
+		move2_index -= 2
+	return move_str[:move2_index - 2] + move_str[move1_index - 1 : move1_index + 1] + move_str[move2_index + 1 : move1_index - 1]+ move_str[move2_index - 1: move2_index + 1] + move_str[move1_index:]
+def get_best_move_seqs_new(board):
+	output = []
+	max_score = -9**5
+	curr_board = board.copy()
+	computed_moves1 = []
+	# arbitrarily large negative
+	for move_one in curr_board.get_valid_moves():
+		
+
+		curr_board.make_move(move_one)
+		# print curr_board
+		# print curr_board
+		# print curr_board.move_str
+		for move_two in curr_board.get_valid_moves():
+			curr_board.make_move(move_two)
+				# print curr_board
+			# print curr_board
+			for move_three in curr_board.get_valid_moves():
+				curr_board.make_move(move_three)
+				# print curr_board
+
+				# print "WAZZAP"
+				# print curr_board
+				score = score_board(curr_board)
+				if score > max_score:
+					output = [[move_one,move_two,move_three]]
+					max_score = score
+				elif score == max_score:
+					output.append([move_one,move_two,move_three])
+				# print "HI"
+				# print curr_board
+				# print curr_board.move_str
+				# print 'before undo level 3'
+				# print curr_board
+				# print "movestring: {}".format(curr_board.move_str)
+				
+				curr_board.undo_move()
+				# print 'after undo level 3'
+				# print curr_board
+				# print "movestring: {}".format(curr_board.move_str)
+				# print 'AFTER UNDO 1'
+				# print curr_board
+				# print curr_board.move_str
+			# print 'before undo level 2'
+			# print curr_board
+			# print "movestring: {}".format(curr_board.move_str)
+			
+			curr_board.undo_move()
+			# print 'after undo level 2'
+			# print curr_board
+			# print "movestring: {}".format(curr_board.move_str)
+			# print 'AFTER UNDO 2'
+			# print curr_board
+		# print 'before undo level 1'
+		# print curr_board
+		# print "movestring: {}".format(curr_board.move_str)
+		
+		curr_board.undo_move()
+		# print 'after undo level 1'
+		# print curr_board
+		# print "movestring: {}".format(curr_board.move_str)
+	return output	
+
 def get_num_free_spaces(board):
 	count = 0
 	for x in range(10):
@@ -78,11 +150,12 @@ def get_num_free_lines(board):
 	return count
 
 def can_place_all_pieces(board):
+	curr_board = board.copy()
 	biggest_pieces = [game.piece_dict['e'],game.piece_dict['i'],game.piece_dict['s']]
 	score = 0
 	for piece in biggest_pieces:
-		board.current_pieces = [piece]
-		if board.has_valid_moves():
+		curr_board.current_pieces = [piece]
+		if curr_board.has_valid_moves():
 			score += 150
 	return score
 # def squared_continuous_spaces(board):
@@ -110,7 +183,7 @@ def squared_continuous_spaces(board):
 				count += 1
 			else:
 				if count == 1:
-					score -= 6
+					score -= 5
 					count = 0
 				else:
 					score += count**2
@@ -121,7 +194,7 @@ def squared_continuous_spaces(board):
 				count += 1
 			else:
 				if count == 1:
-					score -= 6
+					score -= 5
 					count = 0
 				else:
 					score += count**2
@@ -138,11 +211,26 @@ def score_board(board):
 move_queue = []
 def refresh_move_queue(board):
 	global move_queue
-	best_moves = get_best_move_seqs(board)
+	# start = time.clock()
+	# best_moves2 = get_best_move_seqs_new2(board)
+	# print "new2: {} seconds".format(time.clock() - start)
+	start = time.clock()
+	best_moves = get_best_move_seqs_new(board)
+	print "time: {} seconds".format(time.clock() - start)
+	# start = time.clock()
+	# best_moves = get_best_move_seqs(board)
+	# print "old: {} seconds".format(time.clock() - start)
+	# print best_moves2
+	# print best_moves1
+	# print best_moves
+	# start = time.clock()
+	# best_moves = get_best_move_seqs(board)
+	# print "old: {} seconds".format(start - time.clock())	
 	# print("Best Moves: ")
 	# print(best_moves)
 	# print best_moves
 	# move_queue = random.choice(best_moves)
+
 	if best_moves != []:
 		move_queue = best_moves[0]
 

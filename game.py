@@ -1,4 +1,4 @@
-import random
+import random, time, datetime
 
 class InvalidMoveException(Exception):
     def __init__(self, value):
@@ -52,7 +52,6 @@ class Move:
         return chr((10*self.y+self.x)+32)+ self.piece.char_rep
 
 def import_move_as_str(string):
-    print string
     return Move(piece_dict[string[1]], (ord(string[0])-32)%10, ((ord(string[0])-32)//10))
 
 
@@ -62,12 +61,13 @@ class Board:
     On this board, the coordinates system starts with (0,0) being the top left corner, and the first coordinate being the x, and the second being the y."""
     # EMPTY_BOARD = [[0] * 10 for x in range(10)]
     """Constructs a Board. Default is empty"""
-    def __init__(self, matrix = None, current_pieces = []):
+    def __init__(self, matrix = None, current_pieces = [], move_str = ''):
         if matrix == None:
             self.matrix = [[0] * 10 for x in range(10)]
         else:
             self.matrix = matrix
         self.current_pieces = current_pieces[:]
+        self.move_str = ''
 
 
     def copy(self):
@@ -75,7 +75,7 @@ class Board:
         new_matrix = []
         for col in self.matrix:
             new_matrix.append(col[:])
-        return Board(new_matrix, self.current_pieces[:])
+        return Board(new_matrix, self.current_pieces[:], self.move_str[:])
 
     """Returns True if you can place Piece p at the Location loc"""
     def is_valid_move(self, move):
@@ -148,7 +148,8 @@ class Board:
                 for y in range(10):
                     self.matrix[x][y] = 0
             self.current_pieces.remove(move.piece)
-            return full_rows, full_cols, move_str
+            self.move_str += move_str 
+            return full_rows, full_cols
         else:
             print("Here is a string representing the current board:")
             print(self.export_as_str())
@@ -172,7 +173,8 @@ class Board:
             for y in range(10):
                 self.matrix[x][y] = 0
         # self.current_pieces.remove(move.piece)
-        return full_rows, full_cols, move_str
+        self.move_str += move_str
+        return full_rows, full_cols
 
             
 
@@ -199,22 +201,28 @@ class Board:
         for char in input_str[100:]:
             self.current_pieces.append(piece_dict[char])
 
-    def undo_move(self, move):
-        if isinstance(move, Move):
-            for block in move.piece.blocks:
-                self.matrix[block[0] + move.x][block[1] + move.y] = 0
-        else:
-            while len(move) > 2:
-                if move[-1] == 'x':
-                    for y in range(10):
-                        self.matrix[int(move[-2])][y] = 1
-                elif move[-1] == 'y':
-                    for x in range(10):
-                        self.matrix[x][int(move[-2])] = 1
-            new_move = Move()
-            new_move.import_str(move[:2])
-            for block in move.piece.blocks:
-                self.matrix[block[0] + move.x][block[1] + move.y] = 0
+    def undo_move(self):
+        "undoes the last move based on the board's move_str"
+        index = len(self.move_str) -1
+        # print "BEFORE"
+        # print self.move_str
+        last_char = self.move_str[index]
+        while last_char == 'x' or last_char == 'y':
+            if  last_char == 'x':
+                for y in range(10):
+                    self.matrix[int(self.move_str[index-1])][y] = 1
+            elif last_char == 'y':
+                for x in range(10):
+                    self.matrix[x][int(self.move_str[index-1])] = 1
+            index -= 2
+            last_char = self.move_str[index]
+        move = import_move_as_str(self.move_str[index - 1:index + 1])                            
+        for block in move.piece.blocks:
+            self.matrix[block[0] + move.x][block[1] + move.y] = 0
+        self.current_pieces.append(move.piece)
+        self.move_str = self.move_str[:index - 1]
+        # print "AFTER"
+        # print self.move_str
 
     # def import_move_str(self, move_str):
     #     while x < 
@@ -272,6 +280,15 @@ piece_dict = dict(zip(string.ascii_lowercase, piece_list))
 
 
 
+class Result:
+    """Class that defines result of a run, and includes the score, the move string, 
+    time stamp, and a list of strings that are tags that can be aggregated"""
+    def __init__(self, score, timestamp, length, move_str, tags):
+        self.score = score
+        self.move_str = move_str
+        self.tags = tags
+        self.timestamp = timestamp
+        self.length = length
 
 def play(get_move, verbose = True):
     move_num = 1
@@ -279,7 +296,7 @@ def play(get_move, verbose = True):
     score = 0
     board = Board()
     board.refresh_pieces()
-    move_str = ""
+
     while board.has_valid_moves():
 
         if verbose:
@@ -292,8 +309,7 @@ def play(get_move, verbose = True):
             print("------------------------------------------")
         move = get_move(board)
         # try:
-        cleared_rows, cleared_cols, new_move_str = board.make_move(move)
-        move_str += new_move_str
+        cleared_rows, cleared_cols = board.make_move(move)
         score += len(move.piece.blocks)
         if verbose:
             print("{}placed at {},{}".format(move.piece,move.x,move.y))
@@ -320,8 +336,8 @@ def play(get_move, verbose = True):
         print ("Move {}:".format(move_num))
         print ("Score: {}".format(score))
         print ("Here is the current board: \n"+str(board))
-        print("Import this string to see a replay of the game:\n{}".format(move_str))
-    return move_num, cleared_lines, score, board, move_str
+        print("Import this string to see a replay of the game:\n{}".format(board.move_str))
+    return move_num, cleared_lines, score, board, board.move_str
 
 def replay(move_string, verbose = True):
     move_string = move_string.strip("\n")
@@ -330,7 +346,6 @@ def replay(move_string, verbose = True):
     score = 0
     board = Board()
     # board.refresh_pieces()
-    move_str = ""
     while move_string != "":
 
         if verbose:
@@ -348,8 +363,7 @@ def replay(move_string, verbose = True):
         move = import_move_as_str(next_move_chars)
         
         # try:
-        cleared_rows, cleared_cols, new_move_str = board.force_move(move)
-        move_str += new_move_str
+        cleared_rows, cleared_cols = board.force_move(move)
         score += len(move.piece.blocks)
         if verbose:
             print("{}placed at {},{}".format(move.piece,move.x,move.y))
@@ -376,8 +390,8 @@ def replay(move_string, verbose = True):
         print ("Move {}:".format(move_num))
         print ("Score: {}".format(score))
         print ("Here is the current board: \n"+str(board))
-        print("Import this string to see a replay of the game:\n{}".format(move_str))
-    return move_num, cleared_lines, score, board, move_str
+        print("Import this string to see a replay of the game:\n{}".format(board.move_str))
+    return move_num, cleared_lines, score, board, board.move_str
 
 
 
