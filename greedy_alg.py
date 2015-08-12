@@ -242,7 +242,9 @@ def get_move(board):
 		refresh_move_queue(board)
 	if move_queue == []:
 		move_queue = [naive_alg.get_move(board)]
-	print move_queue
+	# print move_queue
 	move = move_queue.pop(0)
-	print move
+	# print move
 	return move
+
+# def get_move_misere(board):
