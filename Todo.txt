@@ -1,8 +1,7 @@
 TODO:
 Major:
-[] Make moves more compact: location can be stored in a single char, so they can be represented by two chars
-[] Keep a log of moves when playing a game (so you can replay any game) 
-[] Make boards hash to binary literals preceded by 3 chars signifying pieces (conserves memory and will allow speedup in mapping moves)
+[x] Make moves more compact: location can be stored in a single char, so they can be represented by two chars
+[x] Keep a log of moves when playing a game (so you can replay any game) 
 [] make utility to save results of run as .json files, and make sure to include tags with what alg they were run with so they can be aggregated
 [] make every .py file just have a dict of title:solvers, and have play.py just append those lists
 [] Remake mapping portion in spark so it can be run parallelized
@@ -15,5 +14,5 @@ For Fun:
 [] improve misere strategy
 
 Ideas:
-[] Maybe in move log, have a char that represents a col/row clear event that is not used in piece dict. that way you can undo moves and not have to copy so many boards
+[x] Maybe in move log, have a char that represents a col/row clear event that is not used in piece dict. that way you can undo moves and not have to copy so many boards
 [] if you change board encoding to bits completely, you can use bit manips to edit it? but prob not because understandability over structure?
