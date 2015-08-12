@@ -183,7 +183,7 @@ def squared_continuous_spaces(board):
 				count += 1
 			else:
 				if count == 1:
-					score -= 5
+					score -= 6
 					count = 0
 				else:
 					score += count**2
@@ -194,7 +194,7 @@ def squared_continuous_spaces(board):
 				count += 1
 			else:
 				if count == 1:
-					score -= 5
+					score -= 6
 					count = 0
 				else:
 					score += count**2
