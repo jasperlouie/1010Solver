@@ -16,3 +16,5 @@ For Fun:
 Ideas:
 [x] Maybe in move log, have a char that represents a col/row clear event that is not used in piece dict. that way you can undo moves and not have to copy so many boards
 [] if you change board encoding to bits completely, you can use bit manips to edit it? but prob not because understandability over structure?
+	have each piece in bit string format, right shift it by x+y*10 to get a spot where it will be, not and it to check if valid move, or it to get updated board. only problem is how to check cols? maybe just iterate through bits 
+[] optimize valid move maker: do this by sorting by largest piece, and if others fit in it, then you can generate some of their moves based on it? also you only need to check if placeable on open spaces, so maybe keep a list of open spaces?
